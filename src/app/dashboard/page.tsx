@@ -5,7 +5,8 @@ import CardFront from '@/components/CardFront';
 import CardBack from '@/components/CardBack';
 import ActivitySheet from '@/components/ActivitySheet';
 
-export default function Dashboard() {
+export default function Home() {
+  const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showList, setShowList] = useState(false);
@@ -31,10 +32,7 @@ export default function Dashboard() {
 
   const handleCheck = (i) => {
     const key = card.data.id;
-    setCheckStates(prev => ({
-      ...prev,
-      [key]: { ...(prev[key] || {}), [i]: !(prev[key]?.[i]) }
-    }));
+    setCheckStates(prev => ({ ...prev, [key]: { ...(prev[key] || {}), [i]: !(prev[key]?.[i]) } }));
   };
 
   const handleSaveResponse = (data) => {
@@ -49,17 +47,10 @@ export default function Dashboard() {
   };
 
   const onTouchStart = (e) => setTouchStart(e.touches[0].clientX);
-  const onTouchMove = (e) => {
-    if (touchStart === null) return;
-    setSwipeOffset(e.touches[0].clientX - touchStart);
-  };
+  const onTouchMove = (e) => { if (touchStart !== null) setSwipeOffset(e.touches[0].clientX - touchStart); };
   const onTouchEnd = () => {
-    if (Math.abs(swipeOffset) > 60) {
-      if (swipeOffset < 0) goTo(currentIndex + 1);
-      else goTo(currentIndex - 1);
-    }
-    setSwipeOffset(0);
-    setTouchStart(null);
+    if (Math.abs(swipeOffset) > 60) { swipeOffset < 0 ? goTo(currentIndex + 1) : goTo(currentIndex - 1); }
+    setSwipeOffset(0); setTouchStart(null);
   };
 
   useEffect(() => {
@@ -73,11 +64,31 @@ export default function Dashboard() {
     return () => window.removeEventListener('keydown', handler);
   }, [currentIndex, goTo, showActivity]);
 
+  if (!started) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 text-center max-w-md">
+          <p className="text-[10px] tracking-[4px] text-gray-500 uppercase mb-2">Connect AI</p>
+          <h1 className="text-3xl font-black text-white mb-3 leading-tight">디지털무역<br />전략카드</h1>
+          <p className="text-gray-400 text-sm mb-8 leading-relaxed">카드게임으로 쉽게 진출전략을 만들어 보세요.<br />16개 주제, 64장의 전략 카드가 준비되어 있습니다.</p>
+          <div className="flex justify-center gap-3 mb-10">
+            {['01','02','03','04','05'].map((id, i) => (
+              <div key={id} className="w-12 h-16 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-lg"
+                style={{ background: CARD_COLORS[id].bg, transform: `rotate(${(i-2)*6}deg)`, boxShadow: `0 4px 16px ${CARD_COLORS[id].bg}44` }}>{id}</div>
+            ))}
+          </div>
+          <button onClick={() => setStarted(true)} className="w-full py-4 bg-cyan-500 text-white font-bold rounded-2xl text-base shadow-lg shadow-cyan-500/25 transition hover:bg-cyan-600">시작하기</button>
+          <p className="text-gray-600 text-[10px] mt-8">© 2025 CONNECT AI · 동구고등학교</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-[#1a1a2e] to-[#16213e] flex flex-col items-center px-4 py-5 relative overflow-hidden">
       <div className="fixed top-[20%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none transition-all duration-500"
         style={{ background: `radial-gradient(circle, ${color}22 0%, transparent 70%)` }} />
-
       <div className="w-full max-w-md mb-4 relative z-10">
         <div className="flex items-center justify-between mb-2">
           <div>
@@ -86,18 +97,14 @@ export default function Dashboard() {
           </div>
           <button onClick={() => setShowList(!showList)}
             className="bg-white/10 border border-white/15 rounded-lg px-3 py-1.5 text-xs text-gray-300 hover:bg-white/15 transition">
-            {showList ? '닫기' : '목록'}
-          </button>
+            {showList ? '닫기' : '목록'}</button>
         </div>
-
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-gray-500 min-w-[50px]">{currentIndex + 1} / {ALL_CARDS.length}</span>
           <div className="flex-1 h-[3px] bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-300"
-              style={{ width: `${((currentIndex + 1) / ALL_CARDS.length) * 100}%`, background: color }} />
+            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${((currentIndex+1)/ALL_CARDS.length)*100}%`, background: color }} />
           </div>
         </div>
-
         <div className="flex gap-1 mt-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {TOPICS.map((t, i) => (
             <button key={t.id} onClick={() => goTo(ALL_CARDS.findIndex(c => c.data.id === t.id))}
@@ -107,17 +114,14 @@ export default function Dashboard() {
                 border: currentTopicIdx === i ? `2px solid ${CARD_COLORS[t.id].bg}` : '1px solid rgba(255,255,255,0.1)',
                 color: currentTopicIdx === i ? '#fff' : '#888',
                 boxShadow: currentTopicIdx === i ? `0 0 12px ${CARD_COLORS[t.id].bg}44` : 'none',
-              }}>
-              {t.id}
-            </button>
+              }}>{t.id}</button>
           ))}
         </div>
       </div>
 
       {showList && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-xl z-[100] overflow-y-auto p-4 pt-16">
-          <button onClick={() => setShowList(false)}
-            className="fixed top-4 right-4 bg-white/15 rounded-lg px-4 py-2 text-white text-sm z-10">닫기</button>
+          <button onClick={() => setShowList(false)} className="fixed top-4 right-4 bg-white/15 rounded-lg px-4 py-2 text-white text-sm z-10">닫기</button>
           <h2 className="text-lg font-extrabold text-white mb-4">전체 카드 목록</h2>
           {TOPICS.map((topic) => (
             <div key={topic.id} className="mb-4">
@@ -139,11 +143,10 @@ export default function Dashboard() {
                     className="rounded-md px-2.5 py-1 text-[11px] flex items-center gap-1 transition hover:bg-white/10"
                     style={{
                       background: hasResponse(sub.id) ? `${CARD_COLORS[topic.id].bg}22` : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${hasResponse(sub.id) ? CARD_COLORS[topic.id].bg + '55' : 'rgba(255,255,255,0.08)'}`,
+                      border: `1px solid ${hasResponse(sub.id) ? CARD_COLORS[topic.id].bg+'55' : 'rgba(255,255,255,0.08)'}`,
                       color: hasResponse(sub.id) ? CARD_COLORS[topic.id].bg : '#aaa',
                     }}>
-                    {hasResponse(sub.id) && <span className="text-[9px]">&#10003;</span>}
-                    {sub.id}
+                    {hasResponse(sub.id) && <span className="text-[9px]">&#10003;</span>}{sub.id}
                   </button>
                 ))}
               </div>
@@ -156,12 +159,12 @@ export default function Dashboard() {
         style={{ aspectRatio: '70/95', perspective: 1200 }}
         onClick={() => !showActivity && setIsFlipped(f => !f)}
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-        {[2, 1].map(offset => (
+        {[2,1].map(offset => (
           <div key={offset} className="absolute rounded-2xl border border-white/5"
-            style={{ top: offset * 4, left: offset * 3, right: -offset * 3, bottom: -offset * 4, background: 'rgba(255,255,255,0.03)', transform: `rotate(${offset * 1.5}deg)` }} />
+            style={{ top: offset*4, left: offset*3, right: -offset*3, bottom: -offset*4, background: 'rgba(255,255,255,0.03)', transform: `rotate(${offset*1.5}deg)` }} />
         ))}
         <div className="w-full h-full relative card-flip"
-          style={{ transform: `rotateY(${isFlipped ? 180 : 0}deg) translateX(${swipeOffset * 0.3}px)`, transition: touchStart ? 'none' : undefined }}>
+          style={{ transform: `rotateY(${isFlipped ? 180 : 0}deg) translateX(${swipeOffset*0.3}px)`, transition: touchStart ? 'none' : undefined }}>
           <div className="card-face"><CardFront card={card} /></div>
           <div className="card-face card-face-back">
             <CardBack card={card} checkStates={currentChecks} onCheck={handleCheck}
@@ -171,43 +174,35 @@ export default function Dashboard() {
       </div>
 
       <p className="text-[11px] text-gray-600 mt-3 text-center relative z-10">
-        {isFlipped ? (card.type === 'question' ? '전략 작성하기 버튼 클릭' : '뒷면 보는 중') : '탭하여 뒤집기'} · 스와이프로 이동
-      </p>
+        {isFlipped ? (card.type === 'question' ? '전략 작성하기 버튼 클릭' : '뒷면 보는 중') : '탭하여 뒤집기'} · 스와이프로 이동</p>
 
       <div className="flex gap-3 items-center mt-2 relative z-10">
-        <button onClick={() => goTo(currentIndex - 1)} disabled={currentIndex === 0}
+        <button onClick={() => goTo(currentIndex-1)} disabled={currentIndex === 0}
           className="w-11 h-11 rounded-full flex items-center justify-center text-lg border border-white/10 transition disabled:opacity-30"
           style={{ background: currentIndex === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.12)' }}>‹</button>
         <div className="text-center min-w-[160px]">
           <div className="text-[13px] font-bold text-white">{card.data.title}</div>
-          <div className="text-[10px] text-gray-500 mt-0.5">
-            {card.type === 'topic' ? '주제카드' : '질문카드'} · 난이도 {'●'.repeat(card.data.difficulty)}{'○'.repeat(5 - card.data.difficulty)}
-          </div>
+          <div className="text-[10px] text-gray-500 mt-0.5">{card.type === 'topic' ? '주제카드' : '질문카드'} · 난이도 {'●'.repeat(card.data.difficulty)}{'○'.repeat(5-card.data.difficulty)}</div>
         </div>
-        <button onClick={() => goTo(currentIndex + 1)} disabled={currentIndex === ALL_CARDS.length - 1}
+        <button onClick={() => goTo(currentIndex+1)} disabled={currentIndex === ALL_CARDS.length-1}
           className="w-11 h-11 rounded-full flex items-center justify-center text-lg transition disabled:opacity-30"
-          style={{ background: currentIndex === ALL_CARDS.length - 1 ? 'rgba(255,255,255,0.05)' : color, boxShadow: currentIndex < ALL_CARDS.length - 1 ? `0 4px 16px ${color}44` : 'none' }}>›</button>
+          style={{ background: currentIndex === ALL_CARDS.length-1 ? 'rgba(255,255,255,0.05)' : color, boxShadow: currentIndex < ALL_CARDS.length-1 ? `0 4px 16px ${color}44` : 'none' }}>›</button>
       </div>
 
       <div className="flex items-center gap-1.5 mt-4 relative z-10">
-        {TOPICS[currentTopicIdx] && (
-          <>
-            <button onClick={() => goTo(ALL_CARDS.findIndex(c => c.data.id === TOPICS[currentTopicIdx].id))}
+        {TOPICS[currentTopicIdx] && (<>
+          <button onClick={() => goTo(ALL_CARDS.findIndex(c => c.data.id === TOPICS[currentTopicIdx].id))}
+            className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white transition"
+            style={{ background: card.data.id === TOPICS[currentTopicIdx].id ? color : 'rgba(255,255,255,0.06)', border: `1px solid ${card.data.id === TOPICS[currentTopicIdx].id ? color : 'rgba(255,255,255,0.1)'}` }}>주제</button>
+          {TOPICS[currentTopicIdx].subs.map((sub, i) => (
+            <button key={sub.id} onClick={() => goTo(ALL_CARDS.findIndex(c => c.data.id === sub.id))}
               className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white transition"
-              style={{ background: card.data.id === TOPICS[currentTopicIdx].id ? color : 'rgba(255,255,255,0.06)', border: `1px solid ${card.data.id === TOPICS[currentTopicIdx].id ? color : 'rgba(255,255,255,0.1)'}` }}>주제</button>
-            {TOPICS[currentTopicIdx].subs.map((sub, i) => (
-              <button key={sub.id} onClick={() => goTo(ALL_CARDS.findIndex(c => c.data.id === sub.id))}
-                className="px-2.5 py-1 rounded-md text-[10px] font-bold text-white transition"
-                style={{ background: card.data.id === sub.id ? color : 'rgba(255,255,255,0.06)', border: `1px solid ${card.data.id === sub.id ? color : 'rgba(255,255,255,0.1)'}` }}>{i + 1}</button>
-            ))}
-          </>
-        )}
+              style={{ background: card.data.id === sub.id ? color : 'rgba(255,255,255,0.06)', border: `1px solid ${card.data.id === sub.id ? color : 'rgba(255,255,255,0.1)'}` }}>{i+1}</button>
+          ))}
+        </>)}
       </div>
 
-      <div className="mt-6 text-[10px] text-gray-700 text-center relative z-10">
-        © 2025 CONNECT AI · 동구고등학교
-        <button onClick={() => { window.location.href = '/'; }} className="ml-3 text-gray-600 underline hover:text-gray-400 transition">나가기</button>
-      </div>
+      <div className="mt-6 text-[10px] text-gray-700 text-center relative z-10">© 2025 CONNECT AI · 동구고등학교</div>
 
       {showActivity && card.type === 'question' && (
         <ActivitySheet card={card} responses={responses[card.data.id]}
